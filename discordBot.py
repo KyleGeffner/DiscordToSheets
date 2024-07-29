@@ -12,7 +12,7 @@ import os
 
 #Edit this with your own specifications
 bot_token = ""
-channel_id = 0  # channel in which bot is listening
+channel_id =   # channel in which bot is listening
 spreadsheet_id = ""  # google sheet id
 
 
@@ -52,13 +52,15 @@ async def log(interaction: discord.Interaction, expense: float, reason: str):
             await interaction.response.send_message(content=f"Added expense of ${expense} for {reason}")
         else:
             await interaction.response.send_message(content=f"Added expense of -${expense*-1} for {reason}")
-        values = [[str(interaction.created_at.date()),expense,reason]]
+        values = [[str(interaction.created_at.date()),abs(expense)*-1,reason]]
         sheet.values().append(
             spreadsheetId=spreadsheet_id,
-            range="Sheet1!A:C",
+            range="expense tracker!A:C",
             valueInputOption="RAW",
             body={"values": values}
         ).execute()
+    else:
+        await interaction.response.send_message(content="Wrong channel")
 
 
 @bot.tree.command(name='undo',description='Undo the most recent log')
@@ -68,7 +70,7 @@ async def undo(interaction):
         #Find bottom row
         result = (
             sheet.values()
-            .get(spreadsheetId=spreadsheet_id, range="A:C")
+            .get(spreadsheetId=spreadsheet_id, range="expense tracker!A:C")
             .execute()
         )
         rows = result.get("values", [])
@@ -77,10 +79,12 @@ async def undo(interaction):
         if bottom_row > 1:
             sheet.values().update(
                 spreadsheetId=spreadsheet_id,
-                range=f"Sheet1!A{bottom_row}:C{bottom_row}",
+                range=f"expense tracker!A{bottom_row}:C{bottom_row}",
                 valueInputOption="RAW",
                 body={"values": [['','','']]}
             ).execute()
+        else:
+            await interaction.response.send_message(content="Wrong channel")
 
 
 
